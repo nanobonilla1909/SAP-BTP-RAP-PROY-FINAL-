@@ -1,0 +1,52 @@
+managed;
+
+define behavior for Z_I_ORDERS_1892 alias Order
+implementation in class zbp_i_orders_1892 unique
+persistent table zorders_1892
+lock master
+authorization master ( instance )
+//etag master <field_name>
+{
+
+  // administrative fields: read only
+  field ( readonly ) created_on;
+  // mandatory fields that are required
+  field ( mandatory ) email;
+  // dynamic field control
+  field (features : instance) order_id;
+  create;
+  update;
+  delete;
+
+  // validations
+  validation validateEmail on save { field email; }
+
+
+  // actions
+  action (features : instance) dispatchOrder result[1] $self;
+  action (features : instance) deliverOrder result[1] $self;
+
+
+  // field ( readonly ) order_id;
+  association _Item { create; }
+
+  mapping for zorders_1892 corresponding;
+
+}
+
+define behavior for Z_I_ITEMS_1892 alias Item
+persistent table zitems_1892
+lock dependent by _Order
+authorization dependent by _Order
+//etag master <field_name>
+{
+  // static fields control
+  field (readonly) order_id, item_id;
+  field ( mandatory ) name, price, quantity;
+  update;
+  delete;
+  association _Order;
+
+  mapping for zitems_1892 corresponding;
+
+}
